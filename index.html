@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#132544" />
+    <meta name="description" content="Compare two JSON values and inspect every change by path." />
+    <title>JSON Diff Studio</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="masthead">
+        <div class="brand"><span class="brand__mark" aria-hidden="true">{ }</span><span>JSON Diff Studio</span></div>
+        <span class="masthead__note">Compare API responses and configuration files</span>
+      </header>
+
+      <main>
+        <section class="intro" aria-labelledby="page-title">
+          <div>
+            <h1 id="page-title">See exactly what changed.</h1>
+            <p>Paste two JSON values. Get a readable list of added, removed, and changed fields.</p>
+          </div>
+          <div class="privacy-note"><span aria-hidden="true">●</span> Runs in your browser. Your data stays on your device.</div>
+        </section>
+
+        <section class="workspace" aria-label="JSON inputs">
+          <div class="editor-panel">
+            <label for="before"><span class="editor-panel__dot editor-panel__dot--before"></span> Original JSON</label>
+            <textarea id="before" spellcheck="false" autocomplete="off" aria-describedby="message"></textarea>
+          </div>
+          <div class="editor-panel">
+            <label for="after"><span class="editor-panel__dot editor-panel__dot--after"></span> Updated JSON</label>
+            <textarea id="after" spellcheck="false" autocomplete="off" aria-describedby="message"></textarea>
+          </div>
+        </section>
+
+        <div class="toolbar">
+          <div class="toolbar__main">
+            <button id="compare" class="button button--primary">Compare JSON</button>
+            <button id="example" class="button button--secondary">Load example</button>
+            <button id="clear" class="button button--text">Clear</button>
+          </div>
+          <p id="message" role="status" aria-live="polite"></p>
+        </div>
+
+        <section class="results-section" aria-labelledby="results-title">
+          <div class="results-header">
+            <div>
+              <h2 id="results-title">Differences</h2>
+              <p id="summary" aria-live="polite">Ready to compare</p>
+            </div>
+            <button id="copy" class="button button--secondary">Copy report</button>
+          </div>
+          <div id="results" class="results"></div>
+        </section>
+      </main>
+      <footer>Built to make JSON changes easier to understand.</footer>
+    </div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
