@@ -11,8 +11,8 @@
   <body>
     <div class="app-shell">
       <header class="masthead">
-        <div class="brand"><span class="brand__mark" aria-hidden="true">{ }</span><span>JSON Diff Studio</span></div>
-        <span class="masthead__note">Compare API responses and configuration files</span>
+        <a class="brand" href="/"><span class="brand__mark" aria-hidden="true">{ }</span><span>JSON Diff Studio</span></a>
+        <nav class="masthead__nav"><a href="/" aria-current="page">Diff tool</a><a href="#monitors">Pricing</a><a href="/app">Monitors</a></nav>
       </header>
 
       <main>
@@ -40,6 +40,7 @@
             <button id="compare" class="button button--primary">Compare JSON</button>
             <button id="example" class="button button--secondary">Load example</button>
             <button id="clear" class="button button--text">Clear</button>
+            <label class="toggle"><input id="structure" type="checkbox" /> Compare structure only</label>
           </div>
           <p id="message" role="status" aria-live="polite"></p>
         </div>
@@ -54,8 +55,24 @@
           </div>
           <div id="results" class="results"></div>
         </section>
+
+        <section id="monitors" class="pitch" aria-labelledby="pitch-title">
+          <h2 id="pitch-title">Find out when an API you depend on changes, before your users do.</h2>
+          <p>Third-party APIs change without notice: a field goes missing, an ID turns from a number into a string, a value that was never null suddenly is. Drift Monitors call your endpoints on a schedule, learn their response schema and alert you as soon as it changes.</p>
+          <ul class="pitch__points">
+            <li><strong>Learns the schema, not the values</strong>Prices and timestamps change on every call. Monitors only alert when the shape changes.</li>
+            <li><strong>Low-noise alerts</strong>Optional fields and empty lists do not raise false alarms. A field has to be gone for three checks in a row before it counts as removed.</li>
+            <li><strong>Email, Slack or webhook</strong>Each alert lists the exact paths, such as <code>$.data[].amount</code>, and what changed.</li>
+          </ul>
+          <div class="plans">
+            <article class="plan"><h3>Free</h3><p class="plan__price">$0</p><ul><li>2 monitors</li><li>Hourly checks</li><li>Email alerts</li></ul></article>
+            <article class="plan plan--featured"><h3>Starter</h3><p class="plan__price">$19<span>/month</span></p><ul><li>20 monitors</li><li>Checks every 5 minutes</li><li>Slack, Discord and webhook alerts</li></ul></article>
+            <article class="plan"><h3>Team</h3><p class="plan__price">$49<span>/month</span></p><ul><li>100 monitors</li><li>Checks every minute</li><li>Everything in Starter</li></ul></article>
+          </div>
+          <a class="button button--primary button--link" href="/app">Start monitoring free</a>
+        </section>
       </main>
-      <footer>Built to make JSON changes easier to understand.</footer>
+      <footer>Built to make JSON changes easier to understand. The diff tool runs in your browser; monitors run on our servers.</footer>
     </div>
     <script type="module" src="./app.js"></script>
   </body>

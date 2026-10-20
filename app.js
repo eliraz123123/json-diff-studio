@@ -1,11 +1,14 @@
 import { compareJson, summarize } from "./diff.js";
+import { diffShapes, inferShape } from "./shape.js";
 
 const beforeInput = document.querySelector("#before");
 const afterInput = document.querySelector("#after");
 const results = document.querySelector("#results");
 const message = document.querySelector("#message");
 const summary = document.querySelector("#summary");
+const structureToggle = document.querySelector("#structure");
 let currentChanges = [];
+let structureMode = false;
 
 const exampleBefore = {
   service: "payments-api",
@@ -23,6 +26,11 @@ const exampleAfter = {
 
 function displayValue(value) {
   return JSON.stringify(value, null, 2);
+}
+
+// In structure mode the before/after values are type names such as "string | null".
+function displayChangeValue(value) {
+  return structureMode ? value : displayValue(value);
 }
 
 function clearMessage() {
@@ -64,7 +72,7 @@ function render(changes) {
       const label = document.createElement("span");
       label.textContent = side === "before" ? "Before" : "After";
       const value = document.createElement("pre");
-      value.textContent = displayValue(change[side]);
+      value.textContent = displayChangeValue(change[side]);
       line.append(label, value);
       item.append(line);
     }
@@ -92,11 +100,13 @@ function compare() {
     afterInput.focus();
     return;
   }
-  currentChanges = compareJson(before, after);
+  structureMode = structureToggle.checked;
+  currentChanges = structureMode ? diffShapes(inferShape(before), inferShape(after)) : compareJson(before, after);
   render(currentChanges);
 }
 
 document.querySelector("#compare").addEventListener("click", compare);
+structureToggle.addEventListener("change", compare);
 document.querySelector("#example").addEventListener("click", () => {
   beforeInput.value = displayValue(exampleBefore);
   afterInput.value = displayValue(exampleAfter);
@@ -113,7 +123,7 @@ document.querySelector("#clear").addEventListener("click", () => {
 });
 document.querySelector("#copy").addEventListener("click", async () => {
   const report = currentChanges.length
-    ? currentChanges.map(change => `${change.type.toUpperCase()} ${change.path}\n${Object.hasOwn(change, "before") ? `Before: ${displayValue(change.before)}\n` : ""}${Object.hasOwn(change, "after") ? `After: ${displayValue(change.after)}` : ""}`).join("\n\n")
+    ? currentChanges.map(change => `${change.type.toUpperCase()} ${change.path}\n${Object.hasOwn(change, "before") ? `Before: ${displayChangeValue(change.before)}\n` : ""}${Object.hasOwn(change, "after") ? `After: ${displayChangeValue(change.after)}` : ""}`).join("\n\n")
     : "No differences found.";
   try {
     await navigator.clipboard.writeText(report);

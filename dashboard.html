@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#132544" />
+    <meta name="description" content="Monitor JSON APIs and get alerted when their response shape changes." />
+    <title>Monitors · JSON Diff Studio</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="masthead">
+        <a class="brand" href="/"><span class="brand__mark" aria-hidden="true">{ }</span><span>JSON Diff Studio</span></a>
+        <nav class="masthead__nav"><a href="/">Diff tool</a><a href="/app" aria-current="page">Monitors</a></nav>
+      </header>
+
+      <main>
+        <section id="signin-view" class="signin" hidden>
+          <h1>Know when an API changes shape.</h1>
+          <p>Sign in with a one-time link. No password needed.</p>
+          <form id="signin-form" class="card stack">
+            <label for="signin-email">Work email</label>
+            <input id="signin-email" type="email" autocomplete="email" required placeholder="you@company.com" />
+            <button class="button button--primary" type="submit">Email me a sign-in link</button>
+          </form>
+          <div id="finish-signin" class="card stack" hidden>
+            <p>Your sign-in link is ready.</p>
+            <button id="finish-button" class="button button--primary" type="button">Finish signing in</button>
+          </div>
+          <p id="signin-message" class="notice" role="status" aria-live="polite"></p>
+        </section>
+
+        <section id="app-view" hidden>
+          <div class="account">
+            <div>
+              <span id="account-email" class="account__email"></span>
+              <span id="account-plan" class="pill"></span>
+              <span id="account-usage" class="account__usage"></span>
+            </div>
+            <div class="account__actions">
+              <button id="upgrade-starter" class="button button--secondary" type="button" hidden>Starter · $19/mo</button>
+              <button id="upgrade-team" class="button button--primary" type="button" hidden>Team · $49/mo</button>
+              <button id="manage-billing" class="button button--secondary" type="button" hidden>Manage billing</button>
+              <button id="sign-out" class="button button--text" type="button">Sign out</button>
+            </div>
+          </div>
+          <p id="app-message" class="notice" role="status" aria-live="polite"></p>
+
+          <div class="results-header">
+            <div>
+              <h2>Monitors</h2>
+              <p class="subtle">Each check learns the response schema and alerts when fields disappear, change type or appear.</p>
+            </div>
+            <button id="new-monitor" class="button button--primary" type="button">New monitor</button>
+          </div>
+          <div id="monitor-list" class="monitor-list"></div>
+          <section id="monitor-detail" class="detail" hidden aria-live="polite"></section>
+        </section>
+      </main>
+      <footer>JSON Diff Studio · Monitors check from our servers. Saved headers are encrypted at rest.</footer>
+    </div>
+
+    <dialog id="monitor-dialog">
+      <form id="monitor-form" class="stack" method="dialog">
+        <h2 id="monitor-form-title">New monitor</h2>
+        <label for="field-name">Name</label>
+        <input id="field-name" required maxlength="100" placeholder="Stripe charges list" />
+        <label for="field-url">JSON endpoint URL (GET)</label>
+        <input id="field-url" type="url" required placeholder="https://api.example.com/v1/items?limit=50" />
+        <label for="field-headers">Request headers <span class="subtle">(one per line, e.g. <code>Authorization: Bearer …</code>)</span></label>
+        <textarea id="field-headers" class="textarea--small" spellcheck="false" placeholder="Authorization: Bearer sk_live_…"></textarea>
+        <label id="keep-headers-label" class="check" hidden><input id="field-clear-headers" type="checkbox" /> Remove saved headers (leave the box above empty to keep them)</label>
+        <div class="grid-2">
+          <div class="stack">
+            <label for="field-interval">Check every</label>
+            <select id="field-interval"></select>
+          </div>
+          <div class="stack">
+            <label for="field-notify">Alert on</label>
+            <select id="field-notify">
+              <option value="all">Any change</option>
+              <option value="breaking">Breaking changes only</option>
+            </select>
+          </div>
+        </div>
+        <label for="field-ignore">Ignore paths <span class="subtle">(one per line; <code>*</code> matches one key, e.g. <code>$.rates.*</code>)</span></label>
+        <textarea id="field-ignore" class="textarea--small" spellcheck="false" placeholder="$.meta.requestId"></textarea>
+        <label for="field-webhook">Slack, Discord or webhook URL <span class="subtle">(optional)</span></label>
+        <input id="field-webhook" type="url" placeholder="https://hooks.slack.com/services/…" />
+        <label id="clear-webhook-label" class="check" hidden><input id="field-clear-webhook" type="checkbox" /> Remove saved webhook</label>
+        <label class="check"><input id="field-email" type="checkbox" checked /> Email me alerts</label>
+        <p id="form-message" class="notice" role="status" aria-live="polite"></p>
+        <div class="toolbar__main">
+          <button id="form-submit" class="button button--primary" type="submit" value="save">Save monitor</button>
+          <button id="form-cancel" class="button button--text" type="button">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+    <script type="module" src="./dashboard.js"></script>
+  </body>
+</html>

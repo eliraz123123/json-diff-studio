@@ -1,32 +1,21 @@
-import { createServer } from "node:http";
-import { readFile } from "node:fs/promises";
-import { fileURLToPath } from "node:url";
-import { dirname, join } from "node:path";
+import { createApp } from "./lib/app.js";
+import { loadConfig } from "./lib/config.js";
 
-const root = dirname(fileURLToPath(import.meta.url));
-const files = {
-  "/": ["index.html", "text/html; charset=utf-8"],
-  "/index.html": ["index.html", "text/html; charset=utf-8"],
-  "/styles.css": ["styles.css", "text/css; charset=utf-8"],
-  "/app.js": ["app.js", "text/javascript; charset=utf-8"],
-  "/diff.js": ["diff.js", "text/javascript; charset=utf-8"]
-};
-const port = Number(process.env.PORT || 4173);
+const config = loadConfig();
+const app = createApp({ config });
 
-createServer(async (request, response) => {
-  const path = new URL(request.url, "http://localhost").pathname;
-  const entry = files[path];
-  if (!entry) {
-    response.writeHead(404);
-    response.end("Not found");
-    return;
-  }
-  try {
-    const content = await readFile(join(root, entry[0]));
-    response.writeHead(200, { "Content-Type": entry[1] });
-    response.end(content);
-  } catch {
-    response.writeHead(500);
-    response.end("Could not load file");
-  }
-}).listen(port, () => console.log(`JSON Diff Studio: http://localhost:${port}`));
+if (!config.email.resendApiKey) console.warn("RESEND_API_KEY is not set: sign-in links and alerts are printed to this log.");
+if (config.allowPrivateTargets) console.warn("ALLOW_PRIVATE_TARGETS is on: monitors can reach this machine's network. Never enable it in production.");
+
+app.server.listen(config.port, () => {
+  console.log(`JSON Diff Studio: ${config.baseUrl} (listening on port ${config.port})`);
+  app.scheduler.start();
+});
+
+for (const signal of ["SIGINT", "SIGTERM"]) {
+  process.once(signal, async () => {
+    console.log(`${signal} received, finishing running checks…`);
+    await app.close();
+    process.exit(0);
+  });
+}
