@@ -52,15 +52,20 @@ export function inferShape(value, { arraySample = 1000 } = {}) {
   );
 }
 
-// Ignore patterns are paths where `*` matches one segment name. A pattern also covers
-// everything nested below it, so `$.meta` ignores `$.meta.requestId`.
+// Ignore patterns are paths where a `.*` segment matches any one key, including quoted
+// ones such as `["123"]`. A pattern also
+// covers everything nested below it, so `$.meta` ignores `$.meta.requestId`.
+// `*` anywhere else is literal: each wildcard is bounded by separators it cannot match,
+// which keeps matching linear (no catastrophic backtracking on hostile patterns).
+const WILDCARD_SEGMENT = /\.\*(?=[.[]|$)/;
+
 export function compileIgnore(patterns = []) {
   const expressions = patterns.map(pattern => {
     const source = pattern
-      .split("*")
-      .map(part => part.replace(/[.+?^${}()|[\]\\]/g, "\\$&"))
-      .join('[^.\\[]*');
-    return new RegExp(`^${source}(?:$|[.\\[])`);
+      .split(WILDCARD_SEGMENT)
+      .map(part => part.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+      .join('(?:\\.[^.[]+|\\["(?:[^"\\\\]|\\\\.)*"\\])');
+    return new RegExp(`^${source}(?:$|[.[])`);
   });
   return path => expressions.some(expression => expression.test(path));
 }

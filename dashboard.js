@@ -215,6 +215,7 @@ async function selectMonitor(id) {
     say(appMessage, error.message);
     return;
   }
+  if (selectedId !== id) return; // a later click won the race
   const { monitor, events, checks, schema } = data;
   const [tone, label] = statusLabel(monitor);
   const action = (text, handler, className = "button button--secondary") => el("button", {
@@ -244,6 +245,7 @@ async function selectMonitor(id) {
       el("div", { class: "toolbar__main" },
         action("Run check now", async () => {
           const { result } = await api(`/api/monitors/${id}/check`, { method: "POST" });
+          if (result.skipped) return say(appMessage, "The monitor changed while checking. Its next check will use the new settings.", "ok");
           say(appMessage, result.ok
             ? (result.changes.length ? `Check finished: ${result.changes.length} change(s) found.` : "Check finished: no schema changes.")
             : `Check failed: ${result.error}`, result.ok ? "ok" : "error");
@@ -322,7 +324,7 @@ function openForm(monitor = null) {
   $("#field-name").value = monitor?.name ?? "";
   $("#field-url").value = monitor?.url ?? "";
   $("#field-headers").placeholder = monitor?.headerNames.length
-    ? `Saved: ${monitor.headerNames.join(", ")} (values hidden). Type here to replace them.`
+    ? `Saved: ${monitor.headerNames.join(", ")} (values hidden). Type here to replace them. Moving the URL to another host removes them.`
     : "Authorization: Bearer sk_live_…";
   $("#keep-headers-label").hidden = !monitor?.headerNames.length;
   $("#field-ignore").value = monitor?.ignorePaths.join("\n") ?? "";
@@ -348,11 +350,14 @@ form.addEventListener("submit", async event => {
     body = {
       name: $("#field-name").value,
       url: $("#field-url").value,
-      intervalMinutes: Number($("#field-interval").value),
       ignorePaths: parseLines($("#field-ignore").value),
       notify: $("#field-notify").value,
       emailAlerts: $("#field-email").checked
     };
+    // Only send the interval when it changed, so editing a monitor after a downgrade
+    // does not fail on an interval the new plan no longer offers.
+    const interval = Number($("#field-interval").value);
+    if (!editing || interval !== editing.intervalMinutes) body.intervalMinutes = interval;
     const headersText = $("#field-headers").value;
     if (headersText.trim()) body.headers = parseHeaders(headersText);
     else if (!editing || $("#field-clear-headers").checked) body.headers = {};

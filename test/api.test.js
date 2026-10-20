@@ -156,7 +156,8 @@ test("a signed Stripe webhook upgrades the plan; an unsigned one is rejected", a
     STRIPE_PRICE_STARTER: "price_starter",
     STRIPE_PRICE_TEAM: "price_team"
   });
-  const app = createApp({ config, mailer: { send: async () => {} } });
+  const fetchSubscriptions = async () => [{ id: "sub_9", status: "active", items: { data: [{ price: { id: "price_team" } }] } }];
+  const app = createApp({ config, mailer: { send: async () => {} }, fetchSubscriptions });
   await new Promise(resolve => app.server.listen(0, "127.0.0.1", resolve));
   t.after(() => app.close());
   app.db.prepare("INSERT INTO users (id, email, created_at) VALUES (7, 'buyer@example.com', 0)").run();
@@ -177,4 +178,26 @@ test("a signed Stripe webhook upgrades the plan; an unsigned one is rejected", a
   const signed = await fetch(url, { method: "POST", body: payload, headers: { "Stripe-Signature": `t=${timestamp},v1=${signature}` } });
   assert.equal(signed.status, 200);
   assert.equal(app.db.prepare("SELECT plan FROM users WHERE id = 7").get().plan, "team");
+});
+
+test("moving a monitor to another host drops its saved headers; reset survives an in-flight check", async t => {
+  const env = await start(t);
+  const cookie = await env.signIn("owner@example.com");
+  const created = await env.call("/api/monitors", {
+    method: "POST", cookie, body: { name: "API", url: env.targetUrl, headers: { Authorization: "Bearer secret" }, intervalMinutes: 60 }
+  });
+  const id = created.data.monitor.id;
+  await env.app.scheduler.idle();
+
+  const samehost = await env.call(`/api/monitors/${id}`, { method: "PATCH", cookie, body: { url: env.targetUrl + "?v=2" } });
+  assert.deepEqual(samehost.data.monitor.headerNames, ["authorization"], "same origin keeps headers");
+  const moved = await env.call(`/api/monitors/${id}`, { method: "PATCH", cookie, body: { url: env.targetUrl.replace("127.0.0.1", "localhost") } });
+  assert.deepEqual(moved.data.monitor.headerNames, [], "another origin drops headers");
+
+  // A check that started before a reset must not write its learned schema back.
+  const before = env.app.db.prepare("SELECT monitors.*, users.email AS user_email, users.plan AS user_plan FROM monitors JOIN users ON users.id = monitors.user_id WHERE monitors.id = ?").get(id);
+  assert.equal((await env.call(`/api/monitors/${id}/reset`, { method: "POST", cookie })).status, 200);
+  const stale = await env.app.scheduler.run(before);
+  assert.deepEqual(stale, { skipped: true });
+  assert.equal(env.app.db.prepare("SELECT state FROM monitors WHERE id = ?").get(id).state, null);
 });

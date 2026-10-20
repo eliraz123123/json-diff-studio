@@ -84,7 +84,7 @@
             </select>
           </div>
         </div>
-        <label for="field-ignore">Ignore paths <span class="subtle">(one per line; <code>*</code> matches one key, e.g. <code>$.rates.*</code>)</span></label>
+        <label for="field-ignore">Ignore paths <span class="subtle">(one per line; a <code>.*</code> segment matches any key, e.g. <code>$.rates.*</code>. Removing a path relearns the schema.)</span></label>
         <textarea id="field-ignore" class="textarea--small" spellcheck="false" placeholder="$.meta.requestId"></textarea>
         <label for="field-webhook">Slack, Discord or webhook URL <span class="subtle">(optional)</span></label>
         <input id="field-webhook" type="url" placeholder="https://hooks.slack.com/services/…" />

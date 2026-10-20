@@ -41,4 +41,11 @@ test("ignore patterns cover descendants and support one-segment wildcards", () =
   assert.equal(ignored("$.rates.USD"), true);
   assert.equal(ignored("$.rates.USD.value"), true);
   assert.equal(ignored("$.rates"), false);
+  assert.equal(compileIgnore(["$.byId.*.name"])('$.byId["8f3a-11"].name'), true, "wildcards match quoted keys");
+});
+
+test("a pathological ignore pattern is treated literally and matches instantly", () => {
+  const started = Date.now();
+  assert.equal(compileIgnore(["$." + "*".repeat(290) + "z"])("$." + "a".repeat(40)), false);
+  assert.ok(Date.now() - started < 50);
 });
